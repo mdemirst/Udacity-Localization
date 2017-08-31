@@ -46,13 +46,6 @@ std::vector<LandmarkObs> ParticleFilter::invTransformLandmarks(Particle particle
     std::vector<LandmarkObs> transformed;
     for(int l = 0; l < observations.size(); ++l)
     {
-//        double x = observations[l].x - particle.x;
-//        double y = observations[l].y - particle.y;
-
-//        x = x*cos(-particle.theta) - y*sin(-particle.theta);
-//        //y = x*sin(-particle.theta) + y*cos(-particle.theta);
-
-
         double x = observations[l].x * cos(particle.theta) + observations[l].y * sin(particle.theta) -
                 particle.x * cos(particle.theta) - particle.y * sin(particle.theta);
 
@@ -77,7 +70,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
-    num_particles = 1;
+    num_particles = 250;
 
     default_random_engine gen;
     normal_distribution<double> dist_x(x, std[0]);
@@ -93,12 +86,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
         new_particle.id = i;
         new_particle.x = dist_x(gen);
         new_particle.y = dist_y(gen);
-
-        double angle = dist_theta(gen);
-
-//        if(angle < 0)
-//            angle += 2*M_PI;
-        new_particle.theta = angle;
+        new_particle.theta = dist_theta(gen);
         new_particle.weight = 1.0;
 
         particles.push_back(new_particle);
@@ -118,7 +106,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 
-    //cout << std_pos[0] << " " << std_pos[1] << " " << std_pos[2] << endl;
     for(int p = 0; p < particles.size(); ++p)
     {
         double theta = particles[p].theta + yaw_rate*delta_t;
@@ -126,22 +113,32 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
         normal_distribution<double> dist_theta(theta, std_pos[2]);
 
-        //theta = dist_theta(gen);
+        theta = dist_theta(gen);
 
-        double x = particles[p].x + (velocity/yaw_rate)*(sin(particles[p].theta + yaw_rate*delta_t) - sin(particles[p].theta));
-        double y = particles[p].y + (velocity/yaw_rate)*(cos(particles[p].theta) - cos(particles[p].theta + yaw_rate*delta_t));
+        double x = 0;
+        double y = 0;
 
-        normal_distribution<double> dist_x(x, std_pos[0]/2);
-        normal_distribution<double> dist_y(y, std_pos[1]/2);
+        if(yaw_rate == 0.0)
+        {
+            x = particles[p].x;
+            y = particles[p].y;
+        }
+        else
+        {
+            x = particles[p].x + (velocity/yaw_rate)*(sin(particles[p].theta + yaw_rate*delta_t) - sin(particles[p].theta));
+            y = particles[p].y + (velocity/yaw_rate)*(cos(particles[p].theta) - cos(particles[p].theta + yaw_rate*delta_t));
+        }
 
-        //x = dist_x(gen);
-        //y = dist_y(gen);
+
+        normal_distribution<double> dist_x(x, std_pos[0]);
+        normal_distribution<double> dist_y(y, std_pos[1]);
+
+        x = dist_x(gen);
+        y = dist_y(gen);
 
         particles[p].x = x;
         particles[p].y = y;
 
-//        if(theta < 0)
-//            theta += 2*M_PI;
         particles[p].theta = theta;
     }
 }
@@ -175,7 +172,6 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		std::vector<LandmarkObs> observations, Map map_landmarks) {
 
-    return;
 	// TODO: Update the weights of each particle using a mult-variate Gaussian distribution. You can read
 	//   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
 	// NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
@@ -229,7 +225,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                 if(pred_angle < 0)
                     pred_angle += 2*M_PI;
 
-                //cout << obs_range - pred_range << " " << obs_angle - pred_angle << endl;
                 weight += multiVariatePdf(obs_range, obs_angle, pred_range, pred_angle, std_landmark[0], std_landmark[1]);
             }
 
