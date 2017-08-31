@@ -14,6 +14,40 @@
 #include <vector>
 #include "map.h"
 
+//definition square:
+inline float squared(float x)
+{
+    return x*x;
+}
+
+/*****************************************************************************
+ * normpdf(X,mu,sigma) computes the probability function at values x using the
+ * normal distribution with mean mu and standard deviation std. x, mue and
+ * sigma must be scalar! The parameter std must be positive.
+ * The normal pdf is y=f(x;mu,std)= 1/(std*sqrt(2pi)) e[ -(x−mu)^2 / 2*std^2 ]
+*****************************************************************************/
+inline float normpdf(float x, float mu, float std) {
+    return (1/sqrt(2*M_PI)/std)*exp(-0.5*squared((x-mu)/std));
+}
+
+inline double multiVariatePdf(double x, double y, double mu_x, double mu_y, double sigma_x, double sigma_y)
+{
+    //assuming there is no correlation between x-y
+    return (1/sqrt(2*M_PI)/sigma_x/sigma_y)*exp(-0.5*(squared((x-mu_x)/sigma_x) +
+                                                         squared((y-mu_y)/sigma_y) +
+                                                         - (((x-mu_x)*(y-mu_y))/(sigma_x*sigma_y))));
+}
+
+inline double get_range(double x, double y)
+{
+    return sqrt(x*x + y*y);
+}
+
+inline double get_bearing(double x, double y)
+{
+    return atan2(y,x);
+}
+
 /*
  * Struct representing one position/control measurement.
  */

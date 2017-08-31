@@ -79,6 +79,7 @@ int main()
 		  	double previous_velocity = std::stod(j[1]["previous_velocity"].get<std::string>());
 			double previous_yawrate = std::stod(j[1]["previous_yawrate"].get<std::string>());
 
+            cout << previous_velocity << " " << previous_yawrate << endl;
 			pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
 		  }
 
@@ -127,8 +128,9 @@ int main()
 			}
 			weight_sum += particles[i].weight;
 		  }
-		  cout << "highest w " << highest_weight << endl;
-		  cout << "average w " << weight_sum/num_particles << endl;
+          cout << "nr " << num_particles << endl;
+          cout << "highest w " << highest_weight << endl;
+          cout << "average w " << weight_sum/num_particles << endl;
 
           json msgJson;
           msgJson["best_particle_x"] = best_particle.x;
